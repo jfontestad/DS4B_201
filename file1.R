@@ -19,7 +19,7 @@ dept_job_role_tbl
 
 # Business Science Problem Framework ----
 
-# 1a. View Business As Machine ----
+# 1A. View Business As Machine ----
 
 # Isolate business unit (Dept and Job Role)
 # Define objective: Retain High performers
@@ -31,9 +31,9 @@ dept_job_role_tbl %>%
     ungroup() %>%
     mutate(pct = n / sum(n))
 
-# 1b. Understand Drivers ----
+# 1B. Understand Drivers ----
 # Investigate Objectivs: 16% Attrition
-# Synthesize Outcomes
+# Synthesize Outcomes: How does attrition change by dept and jobrole
 # Hypothesize Drivers: Job Role and Dept
 
 dept_job_role_tbl %>%
@@ -44,3 +44,28 @@ dept_job_role_tbl %>%
     group_by(Department) %>%
     mutate(pct = n / sum(n))
     
+# Department ----
+dept_job_role_tbl %>%
+    group_by(Department, Attrition) %>%
+    summarize(n = n()) %>%
+    ungroup() %>%
+    # Get Dept Attrition
+    group_by(Department) %>%
+    mutate(pct = n / sum(n))
+
+# Job Role ----
+dept_job_role_tbl %>%
+    group_by(Department, JobRole, Attrition) %>%
+    summarize(n = n()) %>%
+    ungroup() %>%
+    # Get Dept Attrition
+    group_by(Department, JobRole) %>%
+    mutate(pct = n / sum(n)) %>%
+    ungroup() %>%
+    filter(Attrition == "Yes")
+
+# 1C. Measure The Drivers ----
+
+# Collect Information on Employee Attrition
+
+# Develop KPI's
