@@ -164,6 +164,9 @@ dept_job_role_tbl %>%
         attrition_col = Attrition
         , attrition_value = "Yes"
         , baseline_pct = 0.088
+    ) %>%    
+    mutate(
+        cost_of_attrition = calculate_attrition_cost(n = n)
     )
 
 count_to_pct <- function(data, ..., col = n) {
