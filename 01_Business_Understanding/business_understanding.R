@@ -157,18 +157,6 @@ dept_job_role_tbl %>%
     )
 
 # Workflow of Attrition ----
-dept_job_role_tbl %>%
-    count(Department, JobRole, Attrition) %>%
-    count_to_pct(Department, JobRole) %>%
-    assess_attrition(
-        attrition_col = Attrition
-        , attrition_value = "Yes"
-        , baseline_pct = 0.088
-    ) %>%    
-    mutate(
-        cost_of_attrition = calculate_attrition_cost(n = n)
-    )
-
 count_to_pct <- function(data, ..., col = n) {
     
     grouping_vars_expr <- rlang::quos(...)
@@ -198,3 +186,61 @@ assess_attrition <- function(data, attrition_col, attrition_value, baseline_pct)
         )
     
 }
+
+dept_job_role_tbl %>%
+    count(Department, JobRole, Attrition) %>%
+    count_to_pct(Department, JobRole) %>%
+    assess_attrition(
+        attrition_col = Attrition
+        , attrition_value = "Yes"
+        , baseline_pct = 0.088
+    ) %>%    
+    mutate(
+        cost_of_attrition = calculate_attrition_cost(n = n, salary = 80000)
+    ) %>%
+    
+    # Data Manipulation
+    mutate(name = str_c(Department, JobRole, sep = ": ") %>% as_factor()) %>%
+    mutate(name = fct_reorder(name, cost_of_attrition)) %>%
+    mutate(cost_text = str_c("$", format(cost_of_attrition / 1e6, digits = 2),
+                             "M", sep = "")) %>%
+    
+    # Plotting
+    ggplot(
+        mapping = aes(
+            x = cost_of_attrition
+            , y = name
+            )
+        ) +
+    geom_segment(
+        mapping = aes(
+            xend = 0
+            , yend = name
+            )
+        , color = palette_light()[[1]]
+        ) +
+    geom_point(
+        mapping = aes(
+            size = cost_of_attrition
+            )
+        ) +
+    scale_x_continuous(labels = scales::dollar) +
+    geom_label(mapping = aes(
+        label = cost_text
+        , size = cost_of_attrition
+        )
+        , hjust = "inward"
+        , color = palette_light()[[1]]
+        ) +
+    theme_tq() + 
+    scale_size(range = c(3, 5)) +
+    labs(
+        title = "Estimated Cost of Attrition: By Dept and Job Role"
+        , y = ""
+        , x = "Cost of Attrition"
+    ) +
+    theme(
+        legend.position = "none"
+    )
+
+
