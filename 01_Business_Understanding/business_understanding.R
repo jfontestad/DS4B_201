@@ -267,7 +267,7 @@ plot_attrition <- function(
     }
     
     return(g)
-}
+} 
 
 dept_job_role_tbl %>%
     count(Department, Attrition) %>%
