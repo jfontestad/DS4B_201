@@ -57,3 +57,51 @@ train_raw_tbl %>%
     gather() %>%
     arrange(value) %>%
     filter(value <= 10)
+
+# Step 2: Data Visualization ----
+train_raw_tbl %>%
+    select(Attrition, Age, Gender, MaritalStatus, NumCompaniesWorked, Over18, DistanceFromHome) %>%
+    ggpairs()
+
+train_raw_tbl %>%
+    select(Attrition, Age, Gender, MaritalStatus, NumCompaniesWorked, Over18, DistanceFromHome) %>%
+    ggpairs(
+        aes(color = Attrition)
+        , lower = "blank"
+        , legend = 1
+        , diag = list(continuous = wrap("densityDiag", alpha = 0.5))
+    ) +
+    theme(legend.position = "bottom")
+
+plot_ggpairs <- function(data, color = NULL, density_alpha = 0.5) {
+    
+    color_expr <- enquo(color)
+    
+    if(rlang::quo_is_null(color_expr)) {
+        
+        g <- data %>%
+            ggpairs(lower = "blank")
+        
+    } else {
+        
+        color_name <- quo_name(color_expr)
+        
+        g <- data %>%
+            ggpairs(
+                aes_string(color = color_name)
+                , lower = "blank"
+                , legend = 1
+                , diag = list(continuous = wrap("densityDiag", alpha = 0.5))
+            ) +
+            theme(legend.position = "bottom")
+        
+    }
+    
+    return(g)
+}
+
+train_raw_tbl %>%
+    select(Attrition, Age, Gender, MaritalStatus, NumCompaniesWorked, Over18, DistanceFromHome) %>%
+    plot_ggpairs(color = Attrition)
+
+# Explore Features by Category
