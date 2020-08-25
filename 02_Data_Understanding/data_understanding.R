@@ -105,3 +105,26 @@ train_raw_tbl %>%
     plot_ggpairs(color = Attrition)
 
 # Explore Features by Category
+train_raw_tbl %>%
+    select(Attrition, contains("income"), contains("rate"), contains("salary"), contains("stock")) %>%
+    plot_ggpairs(color = Attrition)
+
+train_raw_tbl %>%
+    select(Attrition, contains("Satisfaction"), contains("life")) %>%
+    plot_ggpairs(color = Attrition)
+
+train_raw_tbl %>%
+    select(Attrition, contains("performance"), contains("involvement")) %>%
+    plot_ggpairs(color = Attrition)
+
+train_raw_tbl %>%
+    select(Attrition, contains("overtime"), contains("travel")) %>%
+    plot_ggpairs(color = Attrition)
+
+train_raw_tbl %>%
+    select(Attrition, contains("training"), contains("education")) %>%
+    plot_ggpairs(color = Attrition)
+
+train_raw_tbl %>%
+    select(Attrition, contains("years")) %>%
+    plot_ggpairs(color = Attrition)
