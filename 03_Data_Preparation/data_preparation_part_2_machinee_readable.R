@@ -66,3 +66,42 @@ plot_hist_facet <- function(.data, .bins = 10, .ncol = 5, .fct_reorder = FALSE,
 train_raw_tbl %>%
     select(Attrition, everything()) %>%
     plot_hist_facet(.bins = 10, .ncol = 5)
+
+
+# Data Preprocess with recipies -------------------------------------------
+
+# Plan
+# 1. Impute / Zero Var Features ----
+rec_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
+    step_zv(all_predictors())
+
+# 2. Transformations ----
+
+!skewed_feature_names %in% c("JobLevel","StockOptionLevel")
+
+skewed_feature_names <- train_readable_tbl %>%
+    select_if(is.numeric) %>%
+    map_df(skewness) %>%
+    pivot_longer(cols = everything(), names_to = "key") %>%
+    arrange(desc(value)) %>%
+    filter(value >= 0.8) %>%
+    filter(!key %in% c("JobLevel","StockOptionLevel")) %>%
+    pull(key) %>%
+    as.character()
+
+train_readable_tbl %>%
+    select(skewed_feature_names) %>%
+    plot_hist_facet()
+
+factor_names <- c("JobLevel","StockOptionLevel")
+
+rec_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
+    step_zv(all_predictors()) %>%
+    step_YeoJohnson(skewed_feature_names) %>%
+    step_mutate_at(factor_names, fn = as.factor)
+
+# 3. Discretize ----
+# 4. Normalization / Centr & Scaling ----
+# 5. Dummy Var ----
+# 6. Interaction Variable / Engineered Features ----
+# 7. Multivariate Transformation ----
