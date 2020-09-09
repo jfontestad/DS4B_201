@@ -77,8 +77,6 @@ rec_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
 
 # 2. Transformations ----
 
-!skewed_feature_names %in% c("JobLevel","StockOptionLevel")
-
 skewed_feature_names <- train_readable_tbl %>%
     select_if(is.numeric) %>%
     map_df(skewness) %>%
@@ -86,11 +84,15 @@ skewed_feature_names <- train_readable_tbl %>%
     arrange(desc(value)) %>%
     filter(value >= 0.8) %>%
     filter(!key %in% c("JobLevel","StockOptionLevel")) %>%
+    # You can also kick out those with a skewness score of
+    # -0.5 <= x <= 0.5 if desired
     pull(key) %>%
     as.character()
 
+!skewed_feature_names %in% c("JobLevel","StockOptionLevel")
+
 train_readable_tbl %>%
-    select(skewed_feature_names) %>%
+    select(all_of(skewed_feature_names)) %>%
     plot_hist_facet()
 
 factor_names <- c("JobLevel","StockOptionLevel")
@@ -101,7 +103,52 @@ rec_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
     step_mutate_at(factor_names, fn = as.factor)
 
 # 3. Discretize ----
-# 4. Normalization / Centr & Scaling ----
+# 4. Normalization / Center & Scaling ----
+train_readable_tbl %>%
+    select_if(is.numeric) %>%
+    plot_hist_facet()
+
+rec_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
+    step_zv(all_predictors()) %>%
+    step_YeoJohnson(skewed_feature_names) %>%
+    step_mutate_at(factor_names, fn = as.factor) %>%
+    step_center(all_numeric()) %>%
+    step_scale(all_numeric())
+
+prepared_recipe <- prep(rec_obj)
+prepared_recipe$steps[[4]]
+
+prepared_recipe %>%
+    bake(new_data = train_readable_tbl) %>%
+    select_if(is.numeric) %>%
+    plot_hist_facet()
+
 # 5. Dummy Var ----
+rec_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
+    step_zv(all_predictors()) %>%
+    step_YeoJohnson(skewed_feature_names) %>%
+    step_mutate_at(factor_names, fn = as.factor) %>%
+    step_center(all_numeric()) %>%
+    step_scale(all_numeric()) %>%
+    step_dummy(all_nominal())
+
 # 6. Interaction Variable / Engineered Features ----
 # 7. Multivariate Transformation ----
+
+
+# Final Recipe ------------------------------------------------------------
+
+rec_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
+    step_zv(all_predictors()) %>%
+    step_YeoJohnson(skewed_feature_names) %>%
+    step_mutate_at(factor_names, fn = as.factor) %>%
+    step_center(all_numeric()) %>%
+    step_scale(all_numeric()) %>%
+    step_dummy(all_nominal()) %>%
+    prep()
+
+# Train Data on
+train_tbl <- bake(rec_obj, new_data = train_readable_tbl)
+
+# Holdout set
+test_tbl <- bake(rec_obj, new_data = test_readable_tbl)
