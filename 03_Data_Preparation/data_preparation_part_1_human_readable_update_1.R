@@ -20,6 +20,8 @@ definitions_raw_tbl <- read_excel(path_data_definitions, sheet = 1, col_names = 
 train_raw_tbl %>% glimpse()
 View(definitions_raw_tbl)
 
+# ISSUE ----
+# - readxl now auto-names missing columns ...1, ...2, instead of X__1, X__2
 definitions_tbl <- definitions_raw_tbl %>%
     fill(X__1, .direction = "down") %>%
     filter(!is.na(X__2)) %>%
@@ -28,6 +30,17 @@ definitions_tbl <- definitions_raw_tbl %>%
     mutate(key = as.numeric(key)) %>%
     mutate(value = value %>% str_replace(pattern = "'", replacement = ""))
 definitions_tbl
+
+# SOLUTION ----
+definitions_tbl <- definitions_raw_tbl %>%
+    fill(`...1`, .direction = "down") %>%
+    filter(!is.na(`...2`)) %>%
+    separate(`...2`, into = c("key", "value"), sep = " '", remove = TRUE) %>%
+    rename(column_name = `...1`) %>%
+    mutate(key = as.numeric(key)) %>%
+    mutate(value = value %>% str_replace(pattern = "'", replacement = ""))
+definitions_tbl
+# END SOLUTION ----
 
 definitions_list <- definitions_tbl %>%
     split(.$column_name) %>%
@@ -84,10 +97,10 @@ train_raw_tbl -> data
 process_hr_data_readable <- function(data, definitions_tbl) {
     
     definitions_list <- definitions_tbl %>%
-        fill(X__1, .direction = "down") %>%
-        filter(!is.na(X__2)) %>%
-        separate(X__2, into = c("key", "value"), sep = " '", remove = TRUE) %>%
-        rename(column_name = X__1) %>%
+        fill(`...1`, .direction = "down") %>%
+        filter(!is.na(`...2`)) %>%
+        separate(`...2`, into = c("key", "value"), sep = " '", remove = TRUE) %>%
+        rename(column_name = `...1`) %>%
         mutate(key = as.numeric(key)) %>%
         mutate(value = value %>% str_replace(pattern = "'", replacement = "")) %>%
         split(.$column_name) %>%
