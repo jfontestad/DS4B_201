@@ -194,4 +194,173 @@ get_cor <- function(data, target, use = "pairwise.complete.obs",
 get_cor(train_tbl, Attrition_Yes)
 
 train_tbl %>%
-    get_cor(target = Attrition_Yes)
+    get_cor(target = Attrition_Yes, fct_reorder = TRUE, fct_rev = TRUE)
+
+plot_cor <- function(data, target, fct_reorder = FALSE, fct_rev = FALSE,
+                     include_lbl = TRUE, lbl_precision = 2, lbl_position = "outward",
+                     size = 2, line_size = 1, vert_size = 1,
+                     color_pos = palette_light()[[1]],
+                     color_neg = palette_light()[[2]]) {
+    
+    feature_expr <- enquo(target)
+    feature_name <- quo_name(feature_expr)
+    
+    data_cor <- data %>%
+        get_cor(!! feature_expr, fct_reorder = fct_reorder, fct_rev = fct_rev) %>%
+        mutate(feature_name_text = round(!! feature_expr, lbl_precision)) %>%
+        mutate(Correlation = case_when(
+            (!! feature_expr) >= 0 ~ "Positive"
+            , TRUE ~ "Negative"
+        ) %>%
+            as.factor()
+        )
+    
+    g <- data_cor %>%
+        ggplot(aes_string(x = feature_name, y = "feature", group = "feature")) +
+        geom_point(aes(color = Correlation), size = size) +
+        geom_segment(aes(xend = 0, yend = feature, color = Correlation), size = line_size) +
+        geom_vline(xintercept = 0, color = palette_light()[[1]], size = vert_size) +
+        expand_limits(x = c(-1,1)) +
+        theme_tq() +
+        scale_color_manual(values = c(color_neg, color_pos))
+    
+    if(include_lbl) g <- g + geom_label(
+        aes(
+            label = feature_name_text
+        ),
+        hjust = lbl_position
+    )
+    
+    return(g)
+}
+
+train_tbl %>%
+    select(Attrition_Yes, contains("satisfaction")) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+
+# Correlation Evaluation --------------------------------------------------
+
+# Explore Features by Category
+train_tbl %>%
+    select(Attrition_Yes, contains("jobrole")) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(Attrition_Yes, contains("joblevel")) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(Attrition_Yes
+           , contains("jobinvolvement")
+           , contains("jobsatisfaction")
+           , contains("department")
+           , contains("employeenumber")
+          ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(
+        Attrition_Yes
+        , contains("rate")
+    ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(
+        Attrition_Yes
+        , contains("income")
+    ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(Attrition_Yes
+           , contains("life")) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(
+        Attrition_Yes
+        , contains("jobsatisfaction")
+    ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(Attrition_Yes, contains("performancerating")) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(
+        Attrition_Yes
+        , contains("jobinvolvement")
+    ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(
+        Attrition_Yes
+        , contains("worklifebalance")
+    ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(
+        Attrition_Yes
+        , contains("Education_")
+    ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(
+        Attrition_Yes
+        , contains("training")
+    ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(
+        Attrition_Yes
+        , contains("years")
+    ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(Attrition_Yes
+           , contains("income")
+           , contains("rate")
+           , contains("salary")
+           , contains("stock")
+           ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(
+        Attrition_Yes
+        , contains("gender")
+        , contains("maritalstatus")
+        , contains("numcompanies")
+        , contains("Over18")
+        , contains("DistanceFr")
+    ) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(Attrition_Yes, contains("Satisfaction"), contains("life")) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(Attrition_Yes, contains("performance"), contains("involvement")) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(Attrition_Yes, contains("overtime"), contains("travel")) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(Attrition_Yes, contains("training"), contains("education")) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
+train_tbl %>%
+    select(Attrition_Yes, contains("years")) %>%
+    plot_cor(target = Attrition_Yes, fct_reorder = T, fct_rev = T)
+
