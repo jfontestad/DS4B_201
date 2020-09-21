@@ -96,5 +96,18 @@ extract_h20_model_name_by_position <- function(h2o_leaderboard, n = 1, verbose =
 }
 
 automl_models_h20@leaderboard %>%
-    extract_h20_model_name_by_position(n = 1) %>%
-    h2o.getModel()
+    extract_h20_model_name_by_position(n = 6) %>%
+    h2o.getModel() %>%
+    h2o.saveModel(path = "04_Modeling/h2o_models/")
+
+h2o.loadModel(path = "04_Modeling/h2o_models/DeepLearning_grid__1_AutoML_20200921_150741_model_1")
+
+# Make Predictions ----
+stacked_ensemble_h20 <- h2o.loadModel(path = "04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20200921_150741")
+
+predictions <- h2o.predict(
+    stacked_ensemble_h20,
+    newdata = as.h2o(test_tbl)
+)
+predictions_tbl <- predictions %>%
+    as_tibble()
