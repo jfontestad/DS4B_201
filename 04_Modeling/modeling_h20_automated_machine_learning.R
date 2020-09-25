@@ -283,3 +283,25 @@ stacked_ensemble_model <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_
 performance_h20 <- h2o.performance(deep_learning_model, newdata = test_h2o)
 performance_h20 %>% slotNames()
 performance_h20@metrics
+
+
+# Classifier Summary Metrics ----------------------------------------------
+
+h2o.auc(performance_h20)
+h2o.giniCoef(performance_h20)
+h2o.logloss(performance_h20)
+h2o.confusionMatrix(performance_h20)
+h2o.confusionMatrix(stacked_ensemble_model)
+
+performance_tbl <- h2o.metric(performance_h20) %>%
+    as_tibble()
+
+performance_tbl %>%
+    select(threshold, f1, precision, recall) %>%
+    ggplot(aes(x = threshold)) +
+    geom_line(aes(y = precision), size = 1, color = "green") +
+    geom_line(aes(y = recall), color = "red", size = 1) +
+    #geom_line(aes(y = f1), color = "blue", size = 1) +
+    geom_vline(xintercept = h2o.find_threshold_by_max_metric(performance_h20, "f1")) +
+    theme_tq() +
+    labs(title = "Precision vs. Recall")
