@@ -183,7 +183,7 @@ plot_h2o_visualization <- function(
             ) 
             %>% as.factor()
         ) %>%
-        select(rowname, model_id, model_type, metrics_list, order_by)
+        select(rowname, model_id, model_type, all_of(metrics_list), all_of(order_by))
     
     # Transformation
     if(order_by == "auc") {
