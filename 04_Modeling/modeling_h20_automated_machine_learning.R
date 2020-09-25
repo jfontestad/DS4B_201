@@ -115,7 +115,7 @@ predictions_tbl <- predictions %>%
 stacked_ensemble_h20@allparameters
 
 
-# Viz the leader board ----------------------------------------------------
+# 3. Viz the leader board ----------------------------------------------------
 
 data_transformed_tbl <- automl_models_h20@leaderboard %>%
     as_tibble() %>%
@@ -273,3 +273,13 @@ stacked_ensemble_grid_01 <- h2o.grid(
     , validation_frame = valid_h2o
     , nfolds = 5
 )
+
+
+# 4. Assessing Performance ------------------------------------------------
+deep_learning_model <- h2o.loadModel("04_Modeling/h2o_models/DeepLearning_grid__1_AutoML_20200921_150741_model_1")
+glm_model <- h2o.loadModel("04_Modeling/h2o_models/GLM_1_AutoML_20200921_150741")
+stacked_ensemble_model <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20200921_150741")
+
+performance_h20 <- h2o.performance(deep_learning_model, newdata = test_h2o)
+performance_h20 %>% slotNames()
+performance_h20@metrics
