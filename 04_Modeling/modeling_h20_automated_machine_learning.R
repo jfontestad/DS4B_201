@@ -257,4 +257,19 @@ plot_h2o_visualization(
     , order_by = c("auc")
     , metrics_list = c("auc","aucpr")
     , size = 3
+    , n_max = 10
+)
+
+
+# Grid Search -------------------------------------------------------------
+
+h2o.performance(stacked_ensemble_h20, newdata = test_tbl %>% as.h2o())
+stacked_ensemble_grid_01 <- h2o.grid(
+    algorithm = "deeplearning"
+    , x = x
+    , y = y
+    , grid_id = "stacked_ensemble_grid_01"
+    , training_frame = train_h2o
+    , validation_frame = valid_h2o
+    , nfolds = 5
 )
