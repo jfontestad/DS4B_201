@@ -293,6 +293,7 @@ h2o.logloss(performance_h20)
 h2o.confusionMatrix(performance_h20)
 h2o.confusionMatrix(stacked_ensemble_model)
 
+# Precision vs Recall Plot
 performance_tbl <- h2o.metric(performance_h20) %>%
     as_tibble()
 
@@ -305,3 +306,101 @@ performance_tbl %>%
     geom_vline(xintercept = h2o.find_threshold_by_max_metric(performance_h20, "f1")) +
     theme_tq() +
     labs(title = "Precision vs. Recall")
+
+# ROC Plot
+path <- "04_Modeling/h2o_models/DeepLearning_grid__1_AutoML_20200921_150741_model_1"
+load_model_performance_metrics <- function(path, test_tbl) {
+    
+    model_h2o <- h2o.loadModel(path = path)
+    perf_h2o <- h2o.performance(model_h2o, newdata = as.h2o(test_tbl))
+    
+    perf_h2o %>%
+        h2o.metric() %>%
+        as_tibble() %>%
+        mutate(auc = h2o.auc(perf_h2o)) %>%
+        select(tpr, fpr, auc)
+    
+}
+load_model_performance_metrics(path, test_tbl)
+
+model_metrics_tbl <- fs::dir_info(path = "04_Modeling/h2o_models/") %>%
+    select(path) %>%
+    mutate(metrics = map(path, load_model_performance_metrics, test_tbl)) %>%
+    unnest(cols = metrics)
+
+model_metrics_tbl %>%
+    arrange(desc(auc)) %>%
+    mutate(path = str_split(path, pattern = "/", simplify = TRUE)[,3]) %>%
+    mutate(path = as_factor(path)) %>%
+    mutate(
+        auc = auc %>%
+            round(3) %>% 
+            as.character() %>% 
+            as_factor()
+        ) %>%
+    ggplot(
+        mapping = aes(
+            x = fpr
+            , y = tpr
+            , color = path
+            , linetype = auc
+        )
+    ) +
+    geom_line(size = 1) +
+    theme_tq() +
+    scale_color_tq() +
+    theme(
+        legend.direction = "vertical"
+    ) +
+    labs(
+        title = "ROC Plot"
+        , subtitle = "Performance of Top Performing Models"
+    )
+
+# Precision Recall Plot
+load_model_performance_metrics <- function(path, test_tbl) {
+    
+    model_h2o <- h2o.loadModel(path = path)
+    perf_h2o <- h2o.performance(model_h2o, newdata = as.h2o(test_tbl))
+    
+    perf_h2o %>%
+        h2o.metric() %>%
+        as_tibble() %>%
+        mutate(auc = h2o.auc(perf_h2o)) %>%
+        select(tpr, fpr, auc, precision, recall)
+    
+}
+
+model_metrics_tbl <- fs::dir_info(path = "04_Modeling/h2o_models/") %>%
+    select(path) %>%
+    mutate(metrics = map(path, load_model_performance_metrics, test_tbl)) %>%
+    unnest(cols = metrics)
+
+model_metrics_tbl %>%
+    arrange(desc(auc)) %>%
+    mutate(path = str_split(path, pattern = "/", simplify = TRUE)[,3]) %>%
+    mutate(path = as_factor(path)) %>%
+    mutate(
+        auc = auc %>%
+            round(3) %>% 
+            as.character() %>% 
+            as_factor()
+    ) %>%
+    ggplot(
+        mapping = aes(
+            x = recall
+            , y = precision
+            , color = path
+            , linetype = auc
+        )
+    ) +
+    geom_line(size = 1) +
+    theme_tq() +
+    scale_color_tq() +
+    theme(
+        legend.direction = "vertical"
+    ) +
+    labs(
+        title = "Precision vs Recall"
+        , subtitle = "Performance of Top Performing Models"
+    )
