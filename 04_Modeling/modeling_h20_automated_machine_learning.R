@@ -404,3 +404,192 @@ model_metrics_tbl %>%
         title = "Precision vs Recall"
         , subtitle = "Performance of Top Performing Models"
     )
+
+# Gain and LIfe ----
+
+ranked_predictions_tbl <- predictions_tbl %>%
+    bind_cols(test_tbl) %>%
+    select(predict:Yes, Attrition) %>%
+    arrange(desc(Yes))
+
+calculated_gain_lift_tbl <- ranked_predictions_tbl %>%
+    mutate(n_tile = ntile(Yes, n = 10)) %>%
+    group_by(n_tile) %>%
+    summarise(
+        cases = n()
+        , responses = sum(Attrition == "Yes")
+    ) %>%
+    ungroup() %>%
+    arrange(desc(n_tile)) %>%
+    mutate(group = row_number()) %>%
+    select(group, cases, responses) %>%
+    mutate(
+        cumulative_response = CUMULATIVE_SUM(responses)
+        , pct_responses = responses /  sum(responses)
+        , gain = CUMULATIVE_SUM(pct_responses)
+        , cumulative_pct_cases = CUMULATIVE_SUM(cases) / sum(cases)
+        , lift = gain / cumulative_pct_cases
+        , gain_baseline = cumulative_pct_cases
+        , lift_baseline = gain_baseline / cumulative_pct_cases
+    )
+
+gain_lift_tbl <- performance_h20 %>%
+    h2o.gainsLift() %>%
+    as_tibble()
+
+gain_transformed_tbl <- gain_lift_tbl %>%
+    select(group, cumulative_data_fraction, cumulative_lift, cumulative_capture_rate) %>%
+    select(-contains("lift")) %>%
+    mutate(baseline = cumulative_data_fraction) %>%
+    rename(gain = cumulative_capture_rate) %>%
+    # Stack gain and baseline on top of each other
+    pivot_longer(
+        cols = c(gain, baseline)
+        , names_to = "key"
+        , values_to = "value"
+    )
+
+gain_transformed_tbl %>%
+    ggplot(
+        mapping = aes(
+            x = cumulative_data_fraction
+            , y = value
+            , color = key
+        )
+    ) +
+    geom_line(size = 1.5) +
+    theme_tq() +
+    scale_color_tq() +
+    labs(
+        title = "Gain Chart"
+        , x = "Cumulative Data Fraction"
+        , y = "Gain"
+    )
+
+lift_transformed_tbl <- gain_lift_tbl %>%
+    select(group, cumulative_data_fraction, cumulative_lift, cumulative_capture_rate) %>%
+    select(-contains("rate")) %>%
+    mutate(baseline = 1) %>%
+    rename(lift = cumulative_lift) %>%
+    # Stack gain and baseline on top of each other
+    pivot_longer(
+        cols = c(lift, baseline)
+        , names_to = "key"
+        , values_to = "value"
+    )
+
+lift_transformed_tbl %>%
+    ggplot(
+        mapping = aes(
+            x = cumulative_data_fraction
+            , y = value
+            , color = key
+        )
+    ) +
+    geom_line(size = 1.5) +
+    theme_tq() +
+    scale_color_tq() +
+    labs(
+        title = "Lift Chart"
+        , x = "Cumulative Data Fraction"
+        , y = "Gain"
+    )
+
+
+# 5. Performance Dashboard ------------------------------------------------
+h2o_leaderboard <- automl_models_h20@leaderboard
+newdata <- test_tbl
+order_by <- "auc"
+max_models <- 4
+size <- 1
+
+plot_h2o_performance <- function(
+    h2o_leadergoard
+    , newdata
+    , order_by = c("auc","logloss")
+    , max_models = 3
+    , size = 1.5
+) {
+    
+    # Inputs
+    leaderboard_tbl <- h2o_leaderboard %>%
+        as_tibble() %>%
+        slice(1:max_models)
+    
+    newdata_tbl <- newdata %>%
+        as_tibble()
+    
+    order_by <- tolower(order_by[[1]])
+    order_by_expr <- rlang::sym(order_by)
+    
+    h2o.no_progress()
+    
+    # 1. Model Metrics
+    get_model_performance_metrics <- function(model_id, test_tbl) {
+        
+        model_h2o <- h2o.getModel(model_id)
+        perf_h2o <- h2o.performance(model_h2o, newdata = as.h2o(test_tbl))
+        
+        perf_h2o %>%
+            h2o.metric() %>%
+            as_tibble() %>%
+            select(threshold, tpr, fpr, precision, recall)
+        
+    }
+    
+    model_metrics_tbl <- leaderboard_tbl %>%
+        mutate(metrics = map(model_id, get_model_performance_metrics, newdata_tbl)) %>%
+        unnest(metrics) %>%
+        mutate(
+            model_id = as_factor(model_id) %>%
+                fct_reorder({{ order_by_expr }}, .desc = ifelse(order_by == "auc", TRUE, FALSE))
+            , auc = auc %>%
+                round(3) %>%
+                as.character() %>%
+                as_factor() %>%
+                fct_reorder(as.numeric(model_id))
+            , logloss = logloss %>%
+                round(4) %>%
+                as.character() %>%
+                as_factor() %>%
+                fct_reorder(as.numeric(model_id))
+        )
+    
+    # 1A. ROC Plot
+    p1 <- model_metrics_tbl %>%
+        ggplot(
+            mapping = aes_string(
+                "fpr","tpr", color = "model_id", linetype = order_by
+            )
+        ) +
+        geom_line(size = size) +
+        theme_tq() +
+        scale_color_tq() +
+        labs(
+            title = "ROC"
+            , x = "FPR"
+            , y = "TPR"
+        ) +
+        theme(legend.direction = "vertical")
+    
+    # 1B. Precision vs Recall
+    p2 <- model_metrics_tbl %>%
+        ggplot(
+            mapping = aes_string(
+                x = "recall"
+                , y = "precision"
+                , color = "model_id"
+                , linetype = order_by
+            )
+        ) +
+        geom_line(size = size) +
+        theme_tq() +
+        scale_color_tq() +
+        labs(
+            title = "Precision vs Recall"
+            , x = "Recall"
+            , y = "Precision"
+        ) +
+        theme(legend.position = "none")
+    
+}
