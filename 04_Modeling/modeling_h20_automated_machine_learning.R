@@ -725,5 +725,5 @@ plot_h2o_performance(
     h2o_leadergoard = automl_models_h20@leaderboard
     , newdata = test_tbl
     , order_by = "auc"
-    , max_models = 4
+    , max_models = 3
 )
