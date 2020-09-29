@@ -567,6 +567,7 @@ plot_h2o_performance <- function(
         scale_color_tq() +
         labs(
             title = "ROC"
+            , subtitle = "True Positive Rate vs False Positive Rate"
             , x = "FPR"
             , y = "TPR"
         ) +
@@ -724,5 +725,5 @@ plot_h2o_performance(
     h2o_leadergoard = automl_models_h20@leaderboard
     , newdata = test_tbl
     , order_by = "auc"
-    , max_models = 3
+    , max_models = 4
 )
