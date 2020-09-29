@@ -405,7 +405,7 @@ model_metrics_tbl %>%
         , subtitle = "Performance of Top Performing Models"
     )
 
-# Gain and LIfe ----
+# Gain and Lift ----
 
 ranked_predictions_tbl <- predictions_tbl %>%
     bind_cols(test_tbl) %>%
@@ -524,7 +524,7 @@ plot_h2o_performance <- function(
     
     h2o.no_progress()
     
-    # 1. Model Metrics
+    # 1. Model Metrics ----
     get_model_performance_metrics <- function(model_id, test_tbl) {
         
         model_h2o <- h2o.getModel(model_id)
@@ -555,7 +555,7 @@ plot_h2o_performance <- function(
                 fct_reorder(as.numeric(model_id))
         )
     
-    # 1A. ROC Plot
+    # 1A. ROC Plot ----
     p1 <- model_metrics_tbl %>%
         ggplot(
             mapping = aes_string(
@@ -572,7 +572,7 @@ plot_h2o_performance <- function(
         ) +
         theme(legend.direction = "vertical")
     
-    # 1B. Precision vs Recall
+    # 1B. Precision vs Recall ----
     p2 <- model_metrics_tbl %>%
         ggplot(
             mapping = aes_string(
@@ -583,13 +583,146 @@ plot_h2o_performance <- function(
             )
         ) +
         geom_line(size = size) +
+        geom_vline(
+            xintercept = h2o.find_threshold_by_max_metric(performance_h20, "f1")
+            , color = "green"
+            , size = size
+            , linetype = "dashed"
+        ) +
         theme_tq() +
         scale_color_tq() +
         labs(
             title = "Precision vs Recall"
+            , subtitle = "Green Line indicates Best Threshold"
             , x = "Recall"
             , y = "Precision"
         ) +
         theme(legend.position = "none")
     
+    # 2. Gain / Lift ----
+    
+    get_gain_lift <- function(model_id, test_tbl) {
+        
+        model_h2o <- h2o.getModel(model_id)
+        perf_h2o <- h2o.performance(model_h2o, newdata = as.h2o(test_tbl))
+        
+        perf_h2o %>%
+            h2o.gainsLift() %>%
+            as_tibble() %>%
+            select(group, cumulative_data_fraction, cumulative_capture_rate, cumulative_lift)
+        
+    }
+    
+    gain_lift_tbl <- leaderboard_tbl %>%
+        mutate(metrics = map(model_id, get_gain_lift, newdata_tbl)) %>%
+        unnest(metrics) %>%
+        mutate(
+            model_id = as_factor(model_id) %>%
+                fct_reorder({{ order_by_expr }}, .desc = ifelse(order_by == "auc", TRUE, FALSE))
+            , auc = auc %>%
+                round(3) %>%
+                as.character() %>%
+                as_factor() %>%
+                fct_reorder(as.numeric(model_id))
+            , logloss = logloss %>%
+                round(4) %>%
+                as.character() %>%
+                as_factor() %>%
+                fct_reorder(as.numeric(model_id))
+        ) %>%
+        rename(
+            gain = cumulative_capture_rate
+            , lift = cumulative_lift
+        )
+    
+    # 2A. Gain Plot ----
+    
+    p3 <- gain_lift_tbl %>%
+        ggplot(
+            mapping = aes_string(
+                x = "cumulative_data_fraction"
+                , y = "gain"
+                , color = "model_id"
+                , linetype = order_by
+            )
+        ) +
+        geom_line(size = size) +
+        geom_segment(x = 0, y = 0, xend = 1, yend = 1, color = "black", size = size) +
+        theme_tq() +
+        scale_color_tq() +
+        expand_limits(x = c(0,1), y = c(0,1)) +
+        labs(
+            title = "Gain"
+            , subtitle = "Cumulative Lift"
+            , x = "Cumulative Data Fraction"
+            , y = "Gain"
+        ) +
+        theme(legend.position = "none")
+    
+    # 2B. Lift Plot ----
+    
+    p4 <- gain_lift_tbl %>%
+        ggplot(
+            mapping = aes_string(
+                x = "cumulative_data_fraction"
+                , y = "lift"
+                , color = "model_id"
+                , linetype = order_by
+            )
+        ) +
+        geom_line(size = size) +
+        geom_segment(x = 0, y = 1, xend = 1, yend = 1, color = "black", size = size) +
+        theme_tq() +
+        scale_color_tq() +
+        expand_limits(x = c(0,1), y = c(0,1)) +
+        labs(
+            title = "Lift"
+            , subtitle = "Model Value Add vs Baseline"
+            , x = "Cumulative Data Fraction"
+            , y = "Lift"
+        ) +
+        theme(legend.position = "none")
+    
+    # Combine using cowplot ----
+    
+    p_legend <- get_legend(p1)
+    p1 <- p1 + theme(legend.position = "none")
+    
+    p <- cowplot::plot_grid(p1, p2, p3, p4, ncol = 2)
+    
+    p_title <- ggdraw() +
+        draw_label(
+            "H2O Model Metrics"
+            , size = 18
+            , fontface = "bold"
+            , color = palette_light()[[1]]
+        )
+    
+    p_subtitle <- ggdraw() +
+        draw_label(
+            glue("Ordered by {toupper(order_by)}")
+            , size = 10
+            , color = palette_light()[[1]]
+        )
+    
+    ret <- plot_grid(
+        p_title
+        , p_subtitle
+        , p
+        , p_legend
+        , ncol = 1
+        , rel_heights = c(0.05, 0.05, 1, 0.05 * max_models)
+    )
+    
+    h2o.show_progress()
+    
+    return(ret)
+    
 }
+
+plot_h2o_performance(
+    h2o_leadergoard = automl_models_h20@leaderboard
+    , newdata = test_tbl
+    , order_by = "auc"
+    , max_models = 3
+)
