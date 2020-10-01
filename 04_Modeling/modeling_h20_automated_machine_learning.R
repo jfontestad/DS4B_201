@@ -89,16 +89,16 @@ extract_h20_model_name_by_position <- function(h2o_leaderboard, n = 1, verbose =
     
 }
 
-# automl_models_h20@leaderboard %>%
-#     extract_h20_model_name_by_position(n = 6) %>%
-#     h2o.getModel() %>%
-#     h2o.saveModel(path = "04_Modeling/h2o_models/")
+automl_models_h20@leaderboard %>%
+    extract_h20_model_name_by_position(n = 4) %>%
+    h2o.getModel() %>%
+    h2o.saveModel(path = "04_Modeling/h2o_models/")
 
 # Make Predictions ----
-stacked_ensemble_h20 <- h2o.loadModel(path = "04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20200921_150741")
+stacked_ensemble_h2o <- h2o.loadModel(path = "04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20201001_142408")
 
 predictions <- h2o.predict(
-    stacked_ensemble_h20,
+    stacked_ensemble_h2o,
     newdata = as.h2o(test_tbl)
 )
 predictions_tbl <- predictions %>%
@@ -268,9 +268,9 @@ stacked_ensemble_grid_01 <- h2o.grid(
 
 
 # 4. Assessing Performance ------------------------------------------------
-deep_learning_model <- h2o.loadModel("04_Modeling/h2o_models/DeepLearning_grid__1_AutoML_20200921_150741_model_1")
-glm_model <- h2o.loadModel("04_Modeling/h2o_models/GLM_1_AutoML_20200921_150741")
-stacked_ensemble_model <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20200921_150741")
+deep_learning_model <- h2o.loadModel("04_Modeling/h2o_models/DeepLearning_grid__1_AutoML_20201001_142408_model_1")
+glm_model <- h2o.loadModel("04_Modeling/h2o_models/GLM_1_AutoML_20201001_142408")
+stacked_ensemble_model <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20201001_142408")
 
 performance_h20 <- h2o.performance(deep_learning_model, newdata = test_h2o)
 performance_h20 %>% slotNames()
@@ -288,7 +288,7 @@ h2o.confusionMatrix(stacked_ensemble_model)
 # 5. Performance Dashboard ------------------------------------------------
 
 plot_h2o_performance <- function(
-    h2o_leadergoard
+    h2o_leaderboard
     , newdata
     , order_by = c("auc","logloss")
     , max_models = 3
@@ -506,7 +506,7 @@ plot_h2o_performance <- function(
 }
 
 plot_h2o_performance(
-    h2o_leadergoard = automl_models_h20@leaderboard
+    h2o_leaderboard = automl_models_h20@leaderboard
     , newdata = test_tbl
     , order_by = "auc"
     , max_models = 3
