@@ -44,5 +44,53 @@ test_tbl  <- bake(recipe_obj, new_data = test_readable_tbl)
 
 h2o.init()
 
-automl_leader <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20200921_150741")
+automl_leader <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20201001_142408")
 automl_leader
+
+
+# LIME --------------------------------------------------------------------
+
+# 3.1 Making Predictions ----
+
+predictions_tbl <- automl_leader %>%
+    h2o.predict(newdata = as.h2o(test_tbl)) %>%
+    as_tibble() %>%
+    bind_cols(
+        test_tbl %>%
+            select(Attrition, EmployeeNumber)
+    )
+
+test_tbl %>%
+    slice(5) %>%
+    glimpse()
+
+
+# 3.2 Single Explanation --------------------------------------------------
+
+explainer_obj <- train_tbl %>%
+    select(-Attrition) %>%
+    lime(
+        model            = automl_leader
+        , bin_continuous = TRUE
+        , n_bins         = 4
+        , quantile_bins  = TRUE
+    ) 
+
+explanation <- test_tbl %>%
+    slice(5) %>%
+    select(-Attrition) %>%
+    lime::explain(
+        explainer        = explainer_obj
+        , n_labels       = 1
+        , n_features     = 8
+        , n_permutations = 5000
+        , kernal_width   = 0.05
+    )
+
+explanation %>%
+    as_tibble() %>%
+    select(feature:prediction)
+
+# Shutdown h2o ------------------------------------------------------------
+
+h2o.shutdown()
