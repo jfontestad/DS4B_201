@@ -91,6 +91,25 @@ explanation %>%
     as_tibble() %>%
     select(feature:prediction)
 
+plot_features(explanation = explanation, ncol = 1)
+
+
+# 3.3 Multiple Explanations -----------------------------------------------
+explanation <- test_tbl %>%
+    slice(1:20) %>%
+    select(-Attrition) %>%
+    lime::explain(
+        explainer        = explainer_obj
+        , n_labels       = 1
+        , n_features     = 8
+        , n_permutations = 5000
+        , kernal_width   = 0.05
+    )
+
+plot_features(explanation = explanation, ncol = 4)
+
+plot_explanations(explanation = explanation)
+
 # Shutdown h2o ------------------------------------------------------------
 
 h2o.shutdown()
