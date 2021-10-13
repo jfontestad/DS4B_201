@@ -91,12 +91,12 @@ extract_h2o_model_name_by_position <- function(h2o_leaderboard, n = 1,
 }
 
 automl_models_h2o@leaderboard %>%
-    extract_h2o_model_name_by_position(n = 1) %>%
+    extract_h2o_model_name_by_position(n = 4) %>%
     h2o.getModel() %>%
     h2o.saveModel(path = "04_Modeling/h2o_models/")
 
 # Make Predictions ----
-stacked_ensemble_h2o <- h2o.loadModel(path = "04_Modeling/h2o_models/GBM_grid__1_AutoML_20211013_141026_model_2")
+stacked_ensemble_h2o <- h2o.loadModel(path = "04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20211013_143759")
 
 predictions <- h2o.predict(
     stacked_ensemble_h2o,
@@ -246,7 +246,7 @@ plot_h2o_visualization <- function(
 }
 
 plot_h2o_visualization(
-    automl_models_h20@leaderboard
+    automl_models_h2o@leaderboard
     , order_by = c("auc")
     , metrics_list = c("auc","aucpr")
     , size = 3
