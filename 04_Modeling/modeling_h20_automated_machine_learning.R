@@ -66,7 +66,7 @@ test_h2o  <- test_tbl %>% as.h2o()
 y <- "Attrition"
 x <- setdiff(names(train_h2o), y)
 
-automl_models_h20 <- h2o.automl(
+automl_models_h2o <- h2o.automl(
     x = x,
     y = y,
     training_frame    = train_h2o,
