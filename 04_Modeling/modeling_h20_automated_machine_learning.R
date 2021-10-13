@@ -69,10 +69,10 @@ x <- setdiff(names(train_h2o), y)
 automl_models_h20 <- h2o.automl(
     x = x,
     y = y,
-    training_frame = train_h2o,
-    validation_frame = valid_h2o,
+    training_frame    = train_h2o,
+    validation_frame  = valid_h2o,
     leaderboard_frame = test_h2o,
-    max_runtime_secs = 30,
+    max_runtime_secs  = 30,
     nfolds = 5
 )
 
@@ -95,7 +95,7 @@ automl_models_h20@leaderboard %>%
     h2o.saveModel(path = "04_Modeling/h2o_models/")
 
 # Make Predictions ----
-stacked_ensemble_h2o <- h2o.loadModel(path = "04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20201001_142408")
+stacked_ensemble_h2o <- h2o.loadModel(path = "04_Modeling/h2o_models/GBM_grid__1_AutoML_20211013_141026_model_2")
 
 predictions <- h2o.predict(
     stacked_ensemble_h2o,
@@ -369,7 +369,7 @@ plot_h2o_performance <- function(
         ) +
         geom_line(size = size) +
         geom_vline(
-            xintercept = h2o.find_threshold_by_max_metric(performance_h20, "f1")
+            xintercept = h2o.find_threshold_by_max_metric(perf_h2o, "f1")
             , color = "green"
             , size = size
             , linetype = "dashed"
