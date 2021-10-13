@@ -90,8 +90,8 @@ extract_h2o_model_name_by_position <- function(h2o_leaderboard, n = 1,
     
 }
 
-automl_models_h20@leaderboard %>%
-    extract_h20_model_name_by_position(n = 4) %>%
+automl_models_h2o@leaderboard %>%
+    extract_h2o_model_name_by_position(n = 1) %>%
     h2o.getModel() %>%
     h2o.saveModel(path = "04_Modeling/h2o_models/")
 
