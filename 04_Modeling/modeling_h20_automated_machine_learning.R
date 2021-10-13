@@ -76,7 +76,8 @@ automl_models_h20 <- h2o.automl(
     nfolds = 5
 )
 
-extract_h20_model_name_by_position <- function(h2o_leaderboard, n = 1, verbose = TRUE) {
+extract_h2o_model_name_by_position <- function(h2o_leaderboard, n = 1, 
+                                               verbose = TRUE) {
     
     model_name <- h2o_leaderboard %>%
         as_tibble() %>%
