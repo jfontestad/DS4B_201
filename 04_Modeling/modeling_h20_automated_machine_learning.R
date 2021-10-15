@@ -269,21 +269,21 @@ stacked_ensemble_grid_01 <- h2o.grid(
 
 
 # 4. Assessing Performance ------------------------------------------------
-deep_learning_model <- h2o.loadModel("04_Modeling/h2o_models/DeepLearning_grid__1_AutoML_20201001_142408_model_1")
-glm_model <- h2o.loadModel("04_Modeling/h2o_models/GLM_1_AutoML_20201001_142408")
-stacked_ensemble_model <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20201001_142408")
+deep_learning_model <- h2o.loadModel("04_Modeling/h2o_models/DeepLearning_grid__1_AutoML_20211013_143759_model_2")
+glm_model <- h2o.loadModel("04_Modeling/h2o_models/GLM_1_AutoML_20211013_143759")
+stacked_ensemble_model <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20211013_143759")
 
-performance_h20 <- h2o.performance(deep_learning_model, newdata = test_h2o)
-performance_h20 %>% slotNames()
-performance_h20@metrics
+performance_h2o <- h2o.performance(deep_learning_model, newdata = test_h2o)
+performance_h2o %>% slotNames()
+performance_h2o@metrics
 
 
 # Classifier Summary Metrics ----------------------------------------------
 
-h2o.auc(performance_h20)
-h2o.giniCoef(performance_h20)
-h2o.logloss(performance_h20)
-h2o.confusionMatrix(performance_h20)
+h2o.auc(performance_h2o)
+h2o.giniCoef(performance_h2o)
+h2o.logloss(performance_h2o)
+h2o.confusionMatrix(performance_h2o)
 h2o.confusionMatrix(stacked_ensemble_model)
 
 # 5. Performance Dashboard ------------------------------------------------
@@ -369,17 +369,11 @@ plot_h2o_performance <- function(
             )
         ) +
         geom_line(size = size) +
-        geom_vline(
-            xintercept = h2o.find_threshold_by_max_metric(perf_h2o, "f1")
-            , color = "green"
-            , size = size
-            , linetype = "dashed"
-        ) +
         theme_tq() +
         scale_color_tq() +
         labs(
             title = "Precision vs Recall"
-            , subtitle = "Green Line indicates Best Threshold"
+            #, subtitle = "Green Line indicates Best Threshold"
             , x = "Recall"
             , y = "Precision"
         ) +
@@ -507,7 +501,7 @@ plot_h2o_performance <- function(
 }
 
 plot_h2o_performance(
-    h2o_leaderboard = automl_models_h20@leaderboard
+    h2o_leaderboard = automl_models_h2o@leaderboard
     , newdata = test_tbl
     , order_by = "auc"
     , max_models = 3
