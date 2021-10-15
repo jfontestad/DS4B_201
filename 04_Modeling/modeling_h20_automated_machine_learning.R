@@ -105,7 +105,7 @@ predictions <- h2o.predict(
 predictions_tbl <- predictions %>%
     as_tibble()
 
-# stacked_ensemble_h20@allparameters
+# stacked_ensemble_h2o@allparameters
 
 
 # 3. Viz the leader board ----------------------------------------------------
