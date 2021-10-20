@@ -91,12 +91,12 @@ extract_h2o_model_name_by_position <- function(h2o_leaderboard, n = 1,
 }
 
 automl_models_h2o@leaderboard %>%
-    extract_h2o_model_name_by_position(n = 4) %>%
+    extract_h2o_model_name_by_position(n = 3) %>%
     h2o.getModel() %>%
     h2o.saveModel(path = "04_Modeling/h2o_models/")
 
 # Make Predictions ----
-stacked_ensemble_h2o <- h2o.loadModel(path = "04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20211013_143759")
+stacked_ensemble_h2o <- h2o.loadModel(path = "04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_3_AutoML_1_20211020_121301")
 
 predictions <- h2o.predict(
     stacked_ensemble_h2o,
@@ -269,11 +269,11 @@ stacked_ensemble_grid_01 <- h2o.grid(
 
 
 # 4. Assessing Performance ------------------------------------------------
-deep_learning_model <- h2o.loadModel("04_Modeling/h2o_models/DeepLearning_grid__1_AutoML_20211013_143759_model_2")
-glm_model <- h2o.loadModel("04_Modeling/h2o_models/GLM_1_AutoML_20211013_143759")
-stacked_ensemble_model <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20211013_143759")
-
-performance_h2o <- h2o.performance(deep_learning_model, newdata = test_h2o)
+stacked_ensemble_model_1 <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_1_AutoML_1_20211020_121301")
+glm_model <- h2o.loadModel("04_Modeling/h2o_models/GLM_1_AutoML_1_20211020_121301")
+stacked_ensemble_model_2 <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_2_AutoML_1_20211020_121301")
+stacked_ensemble_model_3 <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_3_AutoML_1_20211020_121301")
+performance_h2o <- h2o.performance(glm_model, newdata = test_h2o)
 performance_h2o %>% slotNames()
 performance_h2o@metrics
 
@@ -504,5 +504,5 @@ plot_h2o_performance(
     h2o_leaderboard = automl_models_h2o@leaderboard
     , newdata = test_tbl
     , order_by = "auc"
-    , max_models = 3
+    , max_models = 4
 )
