@@ -44,7 +44,7 @@ test_tbl  <- bake(recipe_obj, new_data = test_readable_tbl)
 
 h2o.init()
 
-automl_leader <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_AutoML_20201001_142408")
+automl_leader <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_1_AutoML_1_20211020_121301")
 automl_leader
 
 
