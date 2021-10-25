@@ -77,6 +77,11 @@ ev_with_ot_tbl <- predictions_with_ot_tbl %>%
                                 + No  * (cost_of_policy_change)
     )
 
+total_ev_with_ot_tbl <- ev_with_ot_tbl %>%
+    summarise(
+        total_expected_attrition_cost_0 = sum(expected_attrition_cost, na.rm = TRUE)
+    )
+
 
 # 3.2 Calculating Expected Value With Targeted OT ----
 
