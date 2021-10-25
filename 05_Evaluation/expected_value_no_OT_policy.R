@@ -20,7 +20,8 @@ path_data_definitions <- "00_Data/telco_data_definitions.xlsx"
 train_raw_tbl       <- read_excel(path_train, sheet = 1)
 test_raw_tbl        <- read_excel(path_test, sheet = 1)
 definitions_raw_tbl <- read_excel(path_data_definitions, sheet = 1, col_names = FALSE)
-
+definitions_raw_tbl <- definitions_raw_tbl %>%
+    set_names("X__1","X__2")
 # Processing Pipeline
 source("00_Scripts/data_processing_pipeline.R")
 train_readable_tbl <- process_hr_data_readable(train_raw_tbl, definitions_raw_tbl)
@@ -29,13 +30,13 @@ test_readable_tbl  <- process_hr_data_readable(test_raw_tbl, definitions_raw_tbl
 # ML Preprocessing Recipe 
 recipe_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
     step_zv(all_predictors()) %>%
-    step_num2factor(JobLevel, StockOptionLevel) %>%
+    step_mutate_at(JobLevel, StockOptionLevel, fn = as.factor) %>%
     prep()
 
 recipe_obj
 
-train_tbl <- bake(recipe_obj, newdata = train_readable_tbl)
-test_tbl  <- bake(recipe_obj, newdata = test_readable_tbl)
+train_tbl <- bake(recipe_obj, new_data = train_readable_tbl)
+test_tbl  <- bake(recipe_obj, new_data = test_readable_tbl)
 
 # 2. Models ----
 
