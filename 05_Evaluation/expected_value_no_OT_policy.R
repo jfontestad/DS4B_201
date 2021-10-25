@@ -51,6 +51,17 @@ automl_leader
 
 # 3.1 Calculating Expected Value With OT ----
 
+source("00_Scripts/assess_attrition.R")
+
+predictions_with_ot_tbl <- automl_leader %>%
+    h2o.predict(newdata = as.h2o(test_tbl)) %>%
+    as_tibble() %>%
+    bind_cols(
+        test_tbl %>%
+            select(EmployeeNumber, MonthlyIncome, OverTime)
+    )
+
+
 # 3.2 Calculating Expected Value With Targeted OT ----
 
 # 3.3 Savings Calculation ----
