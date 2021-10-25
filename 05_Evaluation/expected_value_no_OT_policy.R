@@ -85,5 +85,48 @@ total_ev_with_ot_tbl <- ev_with_ot_tbl %>%
 
 # 3.2 Calculating Expected Value With Targeted OT ----
 
+test_without_ot_tbl <- test_tbl %>%
+    mutate(OverTime = fct_recode(OverTime, "No" = "Yes"))
+
+predictions_without_ot_tbl <- automl_leader %>%
+    h2o.predict(newdata = as.h2o(test_without_ot_tbl)) %>%
+    as_tibble() %>%
+    bind_cols(
+        test_tbl %>%
+            select(EmployeeNumber, MonthlyIncome, OverTime),
+        test_without_ot_tbl %>%
+            select(OverTime)
+    ) %>%
+    rename(
+        OverTime_0 = `OverTime...6`,
+        OverTime_1 = `OverTime...7`
+    )
+
+avg_ot_pct <- 0.10
+
+ev_without_ot_tbl <- predictions_without_ot_tbl %>%
+    mutate(
+        attrition_cost = calculate_attrition_cost(
+            n = 1
+            , salary = MonthlyIncome * 12
+            , net_revenue_per_employee = 250000
+        )
+    ) %>%
+    mutate(
+        cost_of_policy_change = case_when(
+            OverTime_0 == "Yes" & OverTime_1 == "No" ~ avg_ot_pct * attrition_cost
+            , TRUE ~ 0
+        )
+    ) %>%
+    mutate(
+        expected_attrition_cost = Yes * (attrition_cost + cost_of_policy_change)
+        + No  * (cost_of_policy_change)
+    )
+
+total_ev_without_ot_tbl <- ev_without_ot_tbl %>%
+    summarise(
+        total_expected_attrition_cost_1 = sum(expected_attrition_cost, na.rm = TRUE)
+    )
+
 # 3.3 Savings Calculation ----
 
