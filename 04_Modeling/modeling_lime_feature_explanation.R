@@ -82,7 +82,7 @@ explanation <- test_tbl %>%
     lime::explain(
         explainer        = explainer_obj
         , n_labels       = 1
-        , n_features     = 8
+        , n_features     = 10
         , n_permutations = 5000
         , kernal_width   = 0.05
     )
