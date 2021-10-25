@@ -130,3 +130,13 @@ total_ev_without_ot_tbl <- ev_without_ot_tbl %>%
 
 # 3.3 Savings Calculation ----
 
+bind_cols(
+    total_ev_with_ot_tbl,
+    total_ev_without_ot_tbl
+) %>%
+    mutate(
+        savings = total_expected_attrition_cost_0 -
+                  total_expected_attrition_cost_1
+        , pct_savings = savings /
+            total_expected_attrition_cost_0
+    )
