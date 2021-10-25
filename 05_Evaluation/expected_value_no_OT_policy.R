@@ -61,6 +61,22 @@ predictions_with_ot_tbl <- automl_leader %>%
             select(EmployeeNumber, MonthlyIncome, OverTime)
     )
 
+ev_with_ot_tbl <- predictions_with_ot_tbl %>%
+    mutate(
+        attrition_cost = calculate_attrition_cost(
+            n = 1
+            , salary = MonthlyIncome * 12
+            , net_revenue_per_employee = 250000
+        )
+    ) %>%
+    mutate(
+        cost_of_policy_change = 0
+    ) %>%
+    mutate(
+        expected_attrition_cost = Yes * (attrition_cost + cost_of_policy_change)
+                                + No  * (cost_of_policy_change)
+    )
+
 
 # 3.2 Calculating Expected Value With Targeted OT ----
 
