@@ -20,6 +20,8 @@ path_data_definitions <- "00_Data/telco_data_definitions.xlsx"
 train_raw_tbl       <- read_excel(path_train, sheet = 1)
 test_raw_tbl        <- read_excel(path_test, sheet = 1)
 definitions_raw_tbl <- read_excel(path_data_definitions, sheet = 1, col_names = FALSE)
+definitions_raw_tbl <- definitions_raw_tbl %>%
+    set_names("X__1","X__2")
 
 # Processing Pipeline
 source("00_Scripts/data_processing_pipeline.R")
@@ -29,28 +31,56 @@ test_readable_tbl  <- process_hr_data_readable(test_raw_tbl, definitions_raw_tbl
 # ML Preprocessing Recipe 
 recipe_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
     step_zv(all_predictors()) %>%
-    step_num2factor(JobLevel, StockOptionLevel) %>%
+    step_mutate_at(JobLevel, StockOptionLevel, fn = as.factor) %>% 
     prep()
 
 recipe_obj
 
-train_tbl <- bake(recipe_obj, newdata = train_readable_tbl)
-test_tbl  <- bake(recipe_obj, newdata = test_readable_tbl)
+train_tbl <- bake(recipe_obj, new_data = train_readable_tbl)
+test_tbl  <- bake(recipe_obj, new_data = test_readable_tbl)
 
 # 2. Models ----
 
 h2o.init()
 
 # Replace this with your model!!! (or rerun h2o.automl)
-automl_leader <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_0_AutoML_20180503_035824")
+automl_leader <- h2o.loadModel("04_Modeling/h2o_models/StackedEnsemble_BestOfFamily_1_AutoML_1_20211020_121301")
 
 automl_leader
 
 
 # 3. Primer: Working With Threshold & Rates ----
 
+performance_h2o <- automl_leader %>%
+    h2o.performance(newdata = as.h2o(test_tbl))
 
+performance_h2o %>%
+    h2o.confusionMatrix()
 
+rates_by_threshold_tbl <- performance_h2o %>%
+    h2o.metric() %>%
+    as_tibble()
+
+rates_by_threshold_tbl %>% glimpse()
+
+rates_by_threshold_tbl %>%
+    select(threshold, f1, tnr:tpr) %>%
+    filter(f1 == max(f1)) %>%
+    slice(1)
+
+rates_by_threshold_tbl %>%
+    select(threshold, f1, tnr:tpr) %>%
+    pivot_longer(cols = tnr:tpr, names_to = "metric") %>%
+    mutate(metric = as.factor(metric)) %>%
+    mutate(metric = fct_reorder2(metric, threshold, value)) %>%
+    ggplot(aes(x = threshold, y = value, color = metric)) +
+    geom_point() +
+    geom_smooth() +
+    theme_tq() +
+    scale_color_tq() +
+    theme(
+        legend.position = "right"
+    )
 
 # 4. Expected Value ----
 
