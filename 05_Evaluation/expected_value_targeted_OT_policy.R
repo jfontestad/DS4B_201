@@ -190,6 +190,14 @@ total_ev_targeted_ot_tbl <- ev_targeted_ot_tbl %>%
 
 # 4.3 Savings Calculation ----
 
+savings_tbl <- bind_cols(
+    total_ev_with_ot_tbl,
+    total_ev_targeted_ot_tbl
+) %>%
+    mutate(
+        savings = total_expected_attrition_cost_0 - total_expected_attrition_cost_state_1,
+        pct_savings = savings/total_expected_attrition_cost_0
+    )
 
 
 # 5. Optimizing By Threshold ----
