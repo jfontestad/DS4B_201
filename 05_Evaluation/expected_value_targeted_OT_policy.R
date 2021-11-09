@@ -125,6 +125,25 @@ total_ev_with_ot_tbl <- ev_with_ot_tbl %>%
 
 # 4.2 Calculating Expected Value With Targeted OT ----
 
+max_f1_tbl <- rates_by_threshold_tbl %>%
+    select(threshold, f1, tnr:tpr) %>%
+    filter(f1 == max(f1)) %>%
+    slice(1)
+
+tnr <- max_f1_tbl$tnr
+tpr <- max_f1_tbl$tpr
+fnr <- max_f1_tbl$fnr
+fpr <- max_f1_tbl$fpr
+threshold <- max_f1_tbl$threshold
+
+test_tbl %>%
+    add_column(Yes = predictions_with_ot_tbl$Yes) %>%
+    mutate(
+        OverTime = case_when(
+            Yes >= threshold ~ factor("No", levels = levels(test_tbl$OverTime))
+        )
+    )
+
 # 4.3 Savings Calculation ----
 
 
