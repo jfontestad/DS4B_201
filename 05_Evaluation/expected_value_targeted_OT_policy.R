@@ -63,7 +63,7 @@ rates_by_threshold_tbl <- performance_h2o %>%
 
 rates_by_threshold_tbl %>% glimpse()
 
-rates_by_threshold_tbl %>%
+f1_score <- rates_by_threshold_tbl %>%
     select(threshold, f1, tnr:tpr) %>%
     filter(f1 == max(f1)) %>%
     slice(1)
@@ -76,15 +76,52 @@ rates_by_threshold_tbl %>%
     ggplot(aes(x = threshold, y = value, color = metric)) +
     geom_point() +
     geom_smooth() +
+    geom_vline(xintercept = f1_score$threshold, size = 1) +
     theme_tq() +
     scale_color_tq() +
     theme(
         legend.position = "right"
+    ) +
+    labs(
+        title = "Expected Values",
+        x = "Threshold",
+        y = "Values"
     )
 
 # 4. Expected Value ----
 
 # 4.1 Calculating Expected Value With OT ----
+
+source("00_Scripts/assess_attrition.R")
+
+predictions_with_ot_tbl <- automl_leader %>%
+    h2o.predict(newdata = as.h2o(test_tbl)) %>%
+    as_tibble() %>%
+    bind_cols(
+        test_tbl %>%
+            select(EmployeeNumber, MonthlyIncome, OverTime)
+    )
+
+ev_with_ot_tbl <- predictions_with_ot_tbl %>%
+    mutate(
+        attrition_cost = calculate_attrition_cost(
+            n = 1
+            , salary = MonthlyIncome * 12
+            , net_revenue_per_employee = 250000
+        )
+    ) %>%
+    mutate(
+        cost_of_policy_change = 0
+    ) %>%
+    mutate(
+        expected_attrition_cost = Yes * (attrition_cost + cost_of_policy_change)
+        + No  * (cost_of_policy_change)
+    )
+
+total_ev_with_ot_tbl <- ev_with_ot_tbl %>%
+    summarise(
+        total_expected_attrition_cost_0 = sum(expected_attrition_cost, na.rm = TRUE)
+    )
 
 # 4.2 Calculating Expected Value With Targeted OT ----
 
