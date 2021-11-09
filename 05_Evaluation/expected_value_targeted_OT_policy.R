@@ -139,12 +139,54 @@ threshold <- max_f1_tbl$threshold
 test_targeted_ot_tbl <- test_tbl %>%
     add_column(Yes = predictions_with_ot_tbl$Yes) %>%
     mutate(
-        OverTime_1 = case_when(
+        OverTime = case_when(
             Yes >= threshold ~ factor("No", levels = levels(test_tbl$OverTime))
             , TRUE ~ OverTime
         )
     ) %>%
     select(-Yes)
+
+predictions_targeted_ot_tbl <- automl_leader %>%
+    h2o.predict(newdata = as.h2o(test_targeted_ot_tbl)) %>%
+    as_tibble() %>%
+    bind_cols(
+        test_tbl %>%
+            select(EmployeeNumber, MonthlyIncome, OverTime),
+        test_targeted_ot_tbl %>%
+            select(OverTime)
+    ) %>%
+    rename(OverTime_0 = `OverTime...6`,
+           Overtime_1 = `OverTime...7`)
+
+avg_ot_pct <- 0.10
+ev_targeted_ot_tbl <- predictions_targeted_ot_tbl %>%
+    mutate(
+        attrition_cost = calculate_attrition_cost(
+            n = 1,
+            salary = MonthlyIncome * 12,
+            net_revenue_per_employee = 250000
+        )
+    ) %>%
+    mutate(
+        cost_of_policy_change = case_when(
+            OverTime_0 == "Yes" & Overtime_1 == "No" ~ attrition_cost * avg_ot_pct
+            , TRUE ~ 0
+        )
+    ) %>%
+    mutate(
+        cb_tn = cost_of_policy_change,
+        cb_fp = cost_of_policy_change,
+        cb_tp = cost_of_policy_change + attrition_cost,
+        cb_fn = attrition_cost + cost_of_policy_change,
+        expected_attrition_cost = 
+            Yes * (tpr*cb_tp + fnr*cb_fn) +
+            No  * (tnr*cb_tn + fpr*cb_fp)
+    )
+
+total_ev_targeted_ot_tbl <- ev_targeted_ot_tbl %>%
+    summarise(
+        total_expected_attrition_cost_state_1 = sum(expected_attrition_cost)
+    )
 
 # 4.3 Savings Calculation ----
 
