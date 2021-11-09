@@ -136,13 +136,15 @@ fnr <- max_f1_tbl$fnr
 fpr <- max_f1_tbl$fpr
 threshold <- max_f1_tbl$threshold
 
-test_tbl %>%
+test_targeted_ot_tbl <- test_tbl %>%
     add_column(Yes = predictions_with_ot_tbl$Yes) %>%
     mutate(
-        OverTime = case_when(
+        OverTime_1 = case_when(
             Yes >= threshold ~ factor("No", levels = levels(test_tbl$OverTime))
+            , TRUE ~ OverTime
         )
-    )
+    ) %>%
+    select(-Yes)
 
 # 4.3 Savings Calculation ----
 
