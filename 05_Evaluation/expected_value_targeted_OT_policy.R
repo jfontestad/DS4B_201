@@ -350,6 +350,11 @@ rates_by_threshold_optimized_tbl <- rates_by_threshold_tbl %>%
         )
     )
 
+rates_by_threshold_optimized_tbl %>%
+    ggplot(aes(x = threshold, y = savings)) +
+    geom_line() +
+    scale_color_tq()
+
 
 # 6 Sensitivity Analysis ----
 
