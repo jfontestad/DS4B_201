@@ -326,6 +326,29 @@ calculate_savings_by_threshold(data = test_tbl, h2o_model = automl_leader,
 
 # 5.2 Optimization ----
 
+smpl <- seq(1, nrow(rates_by_threshold_tbl), length.out = 20) %>% round()
+
+partial(calculate_savings_by_threshold, data = test_tbl, h2o_model = automl_leader)
+
+rates_by_threshold_optimized_tbl <- rates_by_threshold_tbl %>%
+    select(threshold, tnr:tpr) %>%
+    slice(smpl) %>%
+    mutate(
+        savings = pmap_dbl(
+            .l = list(
+                threshold = threshold,
+                tnr = tnr,
+                tpr = tpr,
+                fnr = fnr,
+                fpr = fpr
+            ),
+            .f = partial(
+                calculate_savings_by_threshold
+                , data = test_tbl
+                , h2o_model = automl_leader
+            )
+        )
+    )
 
 
 # 6 Sensitivity Analysis ----
