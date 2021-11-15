@@ -353,7 +353,21 @@ rates_by_threshold_optimized_tbl <- rates_by_threshold_tbl %>%
 rates_by_threshold_optimized_tbl %>%
     ggplot(aes(x = threshold, y = savings)) +
     geom_line() +
-    scale_color_tq()
+    geom_point() +
+    # Optimal Point
+    geom_point(shape = 21, size = 5, color = "red",
+               data = rates_by_threshold_optimized_tbl %>%
+                   filter(savings == max(savings)) %>%
+                   slice(1)) +
+    geom_label(aes(label = scales::dollar(savings)),
+               data = rates_by_threshold_optimized_tbl %>%
+                   filter(savings == max(savings)) %>%
+                   slice(1),
+               vjust = -1, color = "red") +
+    # Aesthetics
+    scale_y_continuous(labels = scales::dollar) +
+    theme_tq() +
+    expand_limits(x = c(-.1, 1.1), y = c(-.1,1.1))
 
 
 # 6 Sensitivity Analysis ----
