@@ -400,7 +400,12 @@ rates_by_threshold_optimized_tbl %>%
     scale_x_continuous(labels = scales::percent,
                        breaks = seq(0, 1, by = 0.2)) +
     theme_tq() +
-    expand_limits(x = c(-.01, 1.01), y = 8e5)
+    expand_limits(x = c(-.01, 1.01), y = 8e5) +
+    labs(
+        title = "Optimization Results: Expected Savings Maximized At 13.1%",
+        y = "Threshold",
+        x = "Savings"
+    )
 
 
 # 6 Sensitivity Analysis ----
