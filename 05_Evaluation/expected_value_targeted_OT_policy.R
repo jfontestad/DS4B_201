@@ -317,7 +317,7 @@ calculate_savings_by_threshold <- function(data, h2o_model, threshold = 0,
     
 }
 
-calculate_savings_by_threshold(data = test_tbl, h2o_model = automl_leader,
+max_f1_savings <- calculate_savings_by_threshold(data = test_tbl, h2o_model = automl_leader,
                                threshold = max_f1_tbl$threshold,
                                tnr = max_f1_tbl$tnr,
                                tpr = max_f1_tbl$tpr,
@@ -364,10 +364,43 @@ rates_by_threshold_optimized_tbl %>%
                    filter(savings == max(savings)) %>%
                    slice(1),
                vjust = -1, color = "red") +
+    
+    # F1 Max
+    geom_vline(xintercept = max_f1_tbl$threshold,
+               color = "blue", size = 2, alpha = .382) +
+    annotate(geom = "label", label = scales::dollar(max_f1_savings),
+             x = max_f1_tbl$threshold,
+             y = max_f1_savings,
+             vjust = -1, color = "red") +
+    
+    # No OT Policy
+    geom_point(shape = 21, size = 5, color = "red",
+               data = rates_by_threshold_optimized_tbl %>%
+                   filter(threshold == min(threshold)) %>%
+                   slice(1)) +
+    geom_label(aes(label = scales::dollar(savings)),
+               data = rates_by_threshold_optimized_tbl %>%
+                   filter(threshold == min(threshold)) %>%
+                   slice(1),
+               vjust = -1, color = "red") +
+    
+    # Do nothing Policy
+    geom_point(shape = 21, size = 5, color = "red",
+               data = rates_by_threshold_optimized_tbl %>%
+                   filter(threshold == max(threshold)) %>%
+                   slice(1)) +
+    geom_label(aes(label = scales::dollar(savings)),
+               data = rates_by_threshold_optimized_tbl %>%
+                   filter(threshold == max(threshold)) %>%
+                   slice(1),
+               vjust = -1, color = "red") +
+    
     # Aesthetics
     scale_y_continuous(labels = scales::dollar) +
+    scale_x_continuous(labels = scales::percent,
+                       breaks = seq(0, 1, by = 0.2)) +
     theme_tq() +
-    expand_limits(x = c(-.1, 1.1), y = c(-.1,1.1))
+    expand_limits(x = c(-.01, 1.01), y = 8e5)
 
 
 # 6 Sensitivity Analysis ----
