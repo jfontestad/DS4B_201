@@ -574,3 +574,29 @@ sensitivity_tbl <- list(
             .f = calculate_savings_by_threshold_2_preloaded
         )
     )
+
+sensitivity_tbl %>%
+    ggplot(aes(x = avg_overtime_pct, y = net_revenue_per_employee)) +
+    geom_tile(aes(fill = savings)) +
+    geom_label(
+        aes(
+            label = savings %>% round(0) %>% scales::dollar()
+        )
+    ) +
+    theme_tq() +
+    scale_fill_gradient2(
+        low  = "red",
+        mid  = "white",
+        high = "blue",
+        midpoint = 0
+    ) +
+    scale_x_continuous(labels = scales::percent, 
+                       breaks = seq(0.05, .3, 0.05)
+    ) +
+    scale_y_continuous(labels = scales::dollar) +
+    labs(
+        title = "Profitability Heatmap: Expected Savings Sensativity Analysis",
+        x = "Overtime Threshold",
+        y = "Avg Employee Net Revenue"
+    ) +
+    theme(legend.position = "none")
