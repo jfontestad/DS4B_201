@@ -8,9 +8,6 @@ avg_overtime_pct   <- 0.10
 net_revenue_per_employee <- 250000
 stock_option_cost <- 5000
 
-
-
-
 # Part 1: Solution ----
 
 data <- test_tbl
@@ -32,7 +29,7 @@ calculate_savings_by_threshold_3 <- function(data, h2o_model, threshold = 0,
                                              net_revenue_per_employee = 250000,
                                              stock_option_cost = 5000) {
     
-    data_0_tbl <- as.tibble(data)
+    data_0_tbl <- as_tibble(data)
     
     
     # 4. Expected Value 
@@ -41,7 +38,7 @@ calculate_savings_by_threshold_3 <- function(data, h2o_model, threshold = 0,
     
     pred_0_tbl <- h2o_model %>%
         h2o.predict(newdata = as.h2o(data_0_tbl)) %>%
-        as.tibble() %>%
+        as_tibble() %>%
         bind_cols(
             # Changed in _3 ----
             data_0_tbl %>%
@@ -93,7 +90,7 @@ calculate_savings_by_threshold_3 <- function(data, h2o_model, threshold = 0,
     
     pred_1_tbl <- h2o_model %>%
         h2o.predict(newdata = as.h2o(data_1_tbl)) %>%
-        as.tibble() %>%
+        as_tibble() %>%
         # Changed in _3 ----
     bind_cols(
         data_0_tbl %>%
