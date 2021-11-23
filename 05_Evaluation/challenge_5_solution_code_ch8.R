@@ -99,11 +99,11 @@ calculate_savings_by_threshold_3 <- function(data, h2o_model, threshold = 0,
             select(OverTime, StockOptionLevel)
     ) %>%
         rename(
-            OverTime_0 = OverTime,
-            OverTime_1 = OverTime1,
+            OverTime_0 = `OverTime...6`,
+            OverTime_1 = `OverTime...8`,
             # Changed in _3 ----
-            StockOptionLevel_0 = StockOptionLevel,
-            StockOptionLevel_1 = StockOptionLevel1
+            StockOptionLevel_0 = `StockOptionLevel...7`,
+            StockOptionLevel_1 = `StockOptionLevel...9`
         )
     
     
