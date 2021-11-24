@@ -276,3 +276,9 @@ rates_by_threshold_optimized_tbl_3 %>%
         x = "Threshold (%)", y = "Savings"
     )
 
+# Part 2: Perform sensitivity analysis at optimal threshold ----
+
+net_revenue_per_employee <- 250000
+avg_overtime_pct <- seq(0.05, 0.3, by = 0.05)
+stock_option_cost <- seq(5000, 25000, by = 5000)
+
