@@ -31,6 +31,21 @@ test_readable_tbl  <- process_hr_data_readable(test_raw_tbl, definitions_raw_tbl
 source("00_Scripts/plot_cor.R")
 
 # 2.1 Recipes ----
+# Factor Names
+factor_names <- c("JobLevel","StockOptionLevel")
+
+# Recipe
+recipe_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
+    step_zv(all_predictors()) %>%
+    step_mutate(
+        JobLevel = as_factor(JobLevel),
+        StockOptionLevel = as_factor(StockOptionLevel)
+    ) %>%
+    step_discretize(all_numeric_predictors(), options = list(min_unique = 1)) %>%
+    step_dummy(all_nominal_predictors(), one_hot = TRUE) %>%
+    prep()
+
+train_corr_tbl <- bake(recipe_obj, train_readable_tbl)
 
 
 # 2.2 Correlation Visualization ----
