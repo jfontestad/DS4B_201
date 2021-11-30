@@ -38,8 +38,8 @@ factor_names <- c("JobLevel","StockOptionLevel")
 recipe_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
     step_zv(all_predictors()) %>%
     step_mutate_at(factor_names, fn = as.factor) %>%
-    step_discretize(all_numeric_predictors(), options = list(min_unique = 1)) %>%
-    step_dummy(all_nominal_predictors(), one_hot = TRUE) %>%
+    step_discretize(all_numeric(), options = list(min_unique = 1)) %>%
+    step_dummy(all_nominal(), one_hot = TRUE) %>%
     prep()
 
 train_corr_tbl <- bake(recipe_obj, train_readable_tbl)
@@ -47,6 +47,58 @@ tidy(recipe_obj, 3)
 
 
 # 2.2 Correlation Visualization ----
+
+# Manipulate
+train_corr_tbl %>%
+    glimpse()
+
+corr_level <- 0.06
+
+correlation_results_tbl <- train_corr_tbl %>%
+    select(-Attrition_No) %>%
+    get_cor(target = Attrition_Yes, fct_reorder = TRUE, fct_rev = TRUE) %>%
+    filter(abs(Attrition_Yes) >= corr_level) %>%
+    mutate(
+        relationship = case_when(
+            Attrition_Yes > 0 ~ "Supports Attrition"
+            , TRUE ~ "Contradicts Attrition"
+        )
+    ) %>%
+    mutate(feature_text = as.character(feature)) %>%
+    separate(feature_text, into = "feature_base", sep = "_", extra = "drop") %>%
+    mutate(feature_base = as_factor(feature_base) %>% fct_rev())
+
+length_unique_groups <- correlation_results_tbl %>% 
+    pull(feature_base) %>%
+    unique() %>%
+    length()
+
+# Create viz
+correlation_results_tbl %>%
+    ggplot(
+        aes(
+            x = Attrition_Yes,
+            y = feature_base,
+            color = relationship
+        )
+    ) +
+    geom_point() +
+    geom_label(
+        aes(
+            label = feature
+        )
+        , vjust = -0.5
+    ) +
+    expand_limits(x = c(-0.3, 0.3), y = c(1, length_unique_groups + 1)) +
+    theme_tq() +
+    scale_color_tq() +
+    labs(
+        color = "Relationship"
+        , title = "Correlation Analysis: Recommendation Strategy Development"
+        , subtitle = "Discretizing featues to help identify a strategy"
+        , y = ""
+        , x = "Attrition Yes"
+    )
 
 
 
