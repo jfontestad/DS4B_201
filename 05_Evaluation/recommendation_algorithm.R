@@ -112,6 +112,73 @@ correlation_results_tbl %>%
 
 # 4.1 Personal Development (Mentorship, Education) ----
 
+# YearsAtCompany
+#  YAC - High - Likely to stay / YAC - Low - More Likely to leave
+#  Tie promotion if low to advance faster
+
+# TotalWorkingYears
+#  TWY - High - Likely to stay / TWY - Low - More likely to leave
+#  Tie low TWY to training and formation activities
+
+# YearsInCurrentRole
+#  More time in current role related to lower attrition	
+#  Incentivize specialization or promote
+
+# JobInvolvement	
+#  High JI - Likely to stay	
+#  create personal development plan
+
+# JobSatisfaction	
+#  Low JS - More likely to leave	
+#  Low: create personal development
+
+# PerformanceRating
+#  Low: Personal Development Plan/ High Seek Leadership or Mentorship Roles
+
+# Good Better Best Approach
+
+# (Worst Case) Create Personal Development Plan: JobInvolvement, JobSatisfaction, PerformaceRating
+
+# (Better Case) Promote Training and Formation: YearsAtCompany, TotalWorkingYears
+
+# (Best Case 1) Seek Mentorship Role: YearsInCurrentRole, YearsAtCompany, PerformanceRating, JobSatisfaction
+
+# (Best Case 2) Seek Leadership Role: JobInvolvement, JobSatisfaction, PerformanceRating
+
+train_readable_tbl %>%
+    select(YearsAtCompany, TotalWorkingYears, YearsInCurrentRole, JobInvolvement,
+           JobSatisfaction, PerformanceRating) %>%
+    mutate_if(is.factor, as.numeric) %>%
+    mutate(
+        personal_development_strategy = case_when(
+            # (Worst Case) Create Personal Development Plan: JobInvolvement, JobSatisfaction, PerformaceRating
+            PerformanceRating == 1 | 
+                JobSatisfaction == 1 |
+                JobInvolvement <= 2 ~ "Create Personal Development Plan",
+            
+            # (Better Case) Promote Training and Formation: YearsAtCompany, TotalWorkingYears
+            YearsAtCompany < 3 |
+                TotalWorkingYears < 6 ~ "Promote Training and Formation",
+            
+            # (Best Case 1) Seek Mentorship Role: YearsInCurrentRole, YearsAtCompany, PerformanceRating, JobSatisfaction
+            (YearsInCurrentRole > 3 | YearsAtCompany >= 5) &
+                PerformanceRating >= 3 &
+                JobSatisfaction == 4 ~ "Seek Mentorship Role",
+            
+            # (Best Case 2) Seek Leadership Role: JobInvolvement, JobSatisfaction, PerformanceRating
+            JobInvolvement >= 3 &
+                JobSatisfaction >= 3 &
+                PerformanceRating >= 3 ~ "Seek Leadership Role",
+            
+            # Catch All
+            TRUE ~ "Retain and Maintain"
+        )
+    ) 
+
+train_readable_tbl %>%
+    pull(PerformanceRating) %>%
+    levels()
+
 
 # 4.2 Professional Development (Promotion Readiness) ----
 
